@@ -30,12 +30,14 @@ function validateFullName(fullName) {
     // Define a regular expression pattern to match the permitted characters
     const pattern = /^[a-zA-Z!#$%&'*+\-\/=?^_`{|}~ ]+$/;
     
-    // Test if the full name matches the pattern
-    return pattern.test(fullName);
+    // Split the full name into parts
+    const nameParts = fullName.split(' ');
+
+    // Check if there are at least two name parts and if all parts match the pattern
+    return nameParts.length >= 2 && nameParts.every(part => pattern.test(part));
 }
 
-// Function to validate the form and highlight fields with errors
-function validateAndHighlight(event) {
+function validateAndSendEmail(event) {
     event.preventDefault(); // Prevent the form from submitting
 
     const usernameInput = document.getElementById("username");
@@ -51,31 +53,62 @@ function validateAndHighlight(event) {
     emailInput.classList.remove("error");
     creditCardInput.classList.remove("error");
 
-    if (!validateFullName(username)) {
-        alert("Please enter a valid full name.");
+    // Create an array to store error messages
+    const errors = [];
+
+    // Check for empty fields and add error messages to the array
+    if (!username) {
+        errors.push("Please enter your name.");
         usernameInput.classList.add("error");
-        return;
     }
 
-    if (!validateEmail(email)) {
-        alert("Please enter a valid email address.");
+    if (!email) {
+        errors.push("Please enter your email address.");
         emailInput.classList.add("error");
-        return;
     }
 
-    if (!validateLuhn(creditCard)) {
-        alert("Invalid Credit Card Number. Please check and try again.");
+    if (!creditCard) {
+        errors.push("Please enter a credit card number.");
         creditCardInput.classList.add("error");
+    }
+
+    // Check for valid full name and add an error message to the array if needed
+    if (!validateFullName(username)) {
+        errors.push("Please enter a valid full name.");
+        usernameInput.classList.add("error");
+    }
+
+    // Check for valid email address and add an error message to the array if needed
+    if (!validateEmail(email)) {
+        errors.push("Please enter a valid email address.");
+        emailInput.classList.add("error");
+    }
+
+    // Check for valid credit card using Luhn algorithm and add an error message to the array if needed
+    if (!validateLuhn(creditCard)) {
+        errors.push("Invalid Credit Card Number. Please check and try again.");
+        creditCardInput.classList.add("error");
+    }
+
+    // If there are errors, display them in an alert message
+    if (errors.length > 0) {
+        alert(errors.join("\n"));
         return;
     }
 
-    // If all validations pass, proceed to the next page (replace with your actual logic)
-    alert("Validation successful. Proceeding to the next page.");
-    // You can add code here to navigate to the next page using JavaScript, e.g., window.location.href = "next-page.html";
+    // If all validations pass, send an email using the mailto: link
+    const emailSubject = "Form Submission";
+    const emailBody = `Name: ${username}\nEmail: ${email}\nCredit Card: ${creditCard}`;
+    const emailLink = `mailto:challenge@dn-uk.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+    // Trigger the email link to open the user's default email client
+    window.location.href = emailLink;
+
+    window.location.href = "validation-success.html";
 }
 
 // Add an event listener for the form's submit button
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('form');
-    form.addEventListener('submit', validateAndHighlight);
+    form.addEventListener('submit', validateAndSendEmail);
 });
